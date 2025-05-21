@@ -43,6 +43,9 @@ export default function HomeClient({ initialTodos }: Props) {
                     <Link href="/example">
                         <Button label="atomsサンプル一覧へ" />
                     </Link>
+                    <Link href="/rsc">
+                        <Button label="訪問者カウント（RSC）" />
+                    </Link>
                 </div>
             </Card>
 

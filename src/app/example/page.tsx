@@ -34,7 +34,7 @@ export default function ExampleAtomsPage() {
             <h1 className="text-2xl font-bold mb-6">Atomsコンポーネント サンプル一覧</h1>
 
             <Link href="/">
-                <Button>Homeへ</Button>
+                <Button label="Homeへ" />
             </Link>
 
             <Card className="p-4">
