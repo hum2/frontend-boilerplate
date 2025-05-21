@@ -3,7 +3,6 @@ import { TodoRepositoryImpl } from '@/infrastructure/api/todo/todo_repository_im
 
 export const createContainer = () => {
     const todoRepository: TodoRepository = new TodoRepositoryImpl();
-    console.log('createContainer');
 
     return {
         todoRepository,

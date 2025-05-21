@@ -25,6 +25,11 @@ Next.js、TypeScript、Tailwind CSSを使用した最新のWebアプリケーシ
 - Node.js 20.0.0以上
 - npm 10.0.0以上
 
+### VSCode拡張機能
+
+- [Playwright Test for VSCode](https://marketplace.cursorapi.com/items?itemName=ms-playwright.playwright)
+- [Figma for VS Code](https://marketplace.cursorapi.com/items?itemName=figma.figma-vscode-extension)
+
 ### インストール
 
 ```bash
