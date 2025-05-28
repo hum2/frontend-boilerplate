@@ -2,11 +2,13 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { exampleApiClient } from '@/lib/api/example';
+import { type RequestConfig } from '@/lib/api/core';
 
 /**
  * Todo API使用例
  *
  * エンドポイントごとに異なるレスポンス型を指定する具体例
+ * RequestConfig型の使用例も含む
  */
 
 // Todo関連の型定義
@@ -135,9 +137,16 @@ export const useTodoActions = () => {
     const remove = (id: string) =>
         executeAction(() => exampleApiClient.delete<void>(`/todos/${id}`));
 
-    // 一括削除: レスポンスボディなし
-    const bulkDelete = (ids: string[]) =>
-        executeAction(() => exampleApiClient.delete<void>('/todos/bulk', { data: { ids } }));
+    // 一括削除: レスポンスボディなし（RequestConfig型の使用例）
+    const bulkDelete = (ids: string[]) => {
+        const config: RequestConfig = {
+            data: { ids },
+            headers: {
+                'X-Bulk-Operation': 'delete'
+            }
+        };
+        return executeAction(() => exampleApiClient.delete<void>('/todos/bulk', config));
+    };
 
     return {
         loading,

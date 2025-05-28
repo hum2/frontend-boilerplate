@@ -141,6 +141,18 @@ NEXT_PUBLIC_EXAMPLE_API_KEY=your-api-key
 NEXT_PUBLIC_EXAMPLE_API_AUTH_TOKEN=your-bearer-token
 ```
 
+### ログレベル設定
+```env
+# 開発環境: デバッグログ有効
+NEXT_PUBLIC_API_LOG_LEVEL=debug
+
+# ステージング環境: エラーのみ
+NEXT_PUBLIC_API_LOG_LEVEL=error
+
+# 本番環境: ログ無効
+NEXT_PUBLIC_API_LOG_LEVEL=none
+```
+
 ### 使用例
 ```typescript
 import { exampleApiClient } from '@/lib/api/example';
@@ -157,8 +169,25 @@ const data = await exampleApiClient.get<SomeType>('/api/endpoint');
 
 - **認証**: Bearer認証対応
 - **リトライ**: 5xxエラーとネットワークエラーの自動リトライ
-- **ログ**: リクエスト/レスポンスの詳細ログ
+- **ログ管理**: 環境別ログレベル制御（none, error, info, debug）
 - **エラーハンドリング**: 統一されたエラー形式
+
+### ログ管理機能
+
+本番環境に適した構造化ログシステム：
+
+- **環境別制御**: 開発・ステージング・本番環境での適切なログレベル
+- **セキュリティ配慮**: 本番環境では機密情報の露出を防止
+- **パフォーマンス最適化**: 本番環境でのログ処理によるオーバーヘッド排除
+- **構造化ログ**: JSON形式でのデータ出力により分析が容易
+
+```typescript
+// ログレベル別の出力例
+// debug: リクエスト/レスポンスの詳細情報
+// info: リトライやシステム動作情報
+// error: エラー情報のみ
+// none: ログ出力無効（本番推奨）
+```
 
 ### ファクトリーメソッド
 
@@ -294,6 +323,46 @@ const updatedTodo = await newApiClient.put<TodoResponse>('/todos/123', {
 
 // void型の場合（レスポンスボディなし）
 await newApiClient.delete<void>('/todos/123');
+```
+
+### RequestConfig型を使用したリクエスト設定
+
+HttpClientでは、axiosの実装詳細を隠蔽した独自の`RequestConfig`型を使用します：
+
+```typescript
+import { RequestConfig } from '@/lib/api/core';
+
+// カスタムヘッダーを含むリクエスト
+const config: RequestConfig = {
+    headers: {
+        'X-Custom-Header': 'custom-value',
+        'Accept-Language': 'ja'
+    },
+    timeout: 5000,
+    params: {
+        page: 1,
+        limit: 10
+    }
+};
+
+const result = await apiClient.get<TodoListResponse>('/todos', config);
+
+// DELETEメソッドでボディデータを送信
+const deleteConfig: RequestConfig = {
+    data: { ids: ['1', '2', '3'] }
+};
+
+await apiClient.delete<void>('/todos/bulk', deleteConfig);
+
+// POSTリクエストでタイムアウトを設定
+const postConfig: RequestConfig = {
+    timeout: 10000,
+    headers: {
+        'Content-Type': 'application/json'
+    }
+};
+
+await apiClient.post<TodoResponse>('/todos', todoData, postConfig);
 ```
 
 ### hooksでの型安全な使用

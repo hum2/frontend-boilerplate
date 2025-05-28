@@ -1,4 +1,4 @@
-import { HttpClient, type HttpClientConfig } from './HttpClient';
+import { HttpClient, type HttpClientConfig } from './client';
 
 /**
  * 汎用APIクライアント作成ファクトリー
