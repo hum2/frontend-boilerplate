@@ -9,26 +9,41 @@
 ```
 src/lib/api/
 ├── core/                    # 汎用的なHTTPクライアントとファクトリー
-│   ├── HttpClient.ts       # 汎用HTTPクライアントクラス
+│   ├── client.ts           # HttpClientクラス（汎用HTTPクライアント）
 │   ├── factory.ts          # 汎用ファクトリーメソッド
 │   └── index.ts           # エクスポート統合
 ├── example/                # 外部API例
 │   ├── config.ts          # 外部API設定
 │   ├── client.ts          # 外部APIクライアント
 │   └── index.ts           # エクスポート統合
-└── types.ts               # 共通型定義
+├── types.ts               # 共通型定義
+└── README.md             # このファイル
+
+src/lib/logger/             # ログ管理システム（責務分離）
+├── types.ts               # ログ関連型定義
+├── logger.ts              # Loggerクラス（コア機能）
+├── factory.ts             # ロガーファクトリーメソッド
+└── index.ts               # エクスポート統合
 ```
 
 ## 設計原則
 
 ### ✅ **関心の分離**
 - `core`: 汎用的なHTTP通信機能
+- `logger`: ログ管理システム（独立したモジュール）
 - 各APIディレクトリ: 特定の外部API専用の設定とクライアント
+
+### ✅ **責務分離設計**
+- **Logger**: アプリケーション全体で再利用可能な独立したログ管理
+- **HttpClient**: HTTP通信のみに特化
+- **ApiClient**: 特定APIとの通信に特化
 
 ### ✅ **ファクトリーパターン**
 - `createApiClient`: 汎用的なAPIクライアント作成
 - `createConfigFromEnv`: 環境変数ベースの設定作成
 - `createServiceClient`: サービス名ベースのクライアント作成
+- `createHttpLogger`: HTTPクライアント専用ロガー生成
+- `createAppLogger`: アプリケーション汎用ロガー生成
 
 ### ✅ **型安全性**
 - TypeScriptによる完全な型定義
@@ -172,21 +187,13 @@ const data = await exampleApiClient.get<SomeType>('/api/endpoint');
 - **ログ管理**: 環境別ログレベル制御（none, error, info, debug）
 - **エラーハンドリング**: 統一されたエラー形式
 
-### ログ管理機能
-
-本番環境に適した構造化ログシステム：
-
-- **環境別制御**: 開発・ステージング・本番環境での適切なログレベル
-- **セキュリティ配慮**: 本番環境では機密情報の露出を防止
-- **パフォーマンス最適化**: 本番環境でのログ処理によるオーバーヘッド排除
-- **構造化ログ**: JSON形式でのデータ出力により分析が容易
-
 ```typescript
-// ログレベル別の出力例
-// debug: リクエスト/レスポンスの詳細情報
-// info: リトライやシステム動作情報
-// error: エラー情報のみ
-// none: ログ出力無効（本番推奨）
+import { HttpClient } from '@/lib/api/core';
+
+const client = new HttpClient({
+    enableLogging: true,  // ログを有効化
+    logLevel: 'debug'     // 明示的レベル指定（省略可）
+});
 ```
 
 ### ファクトリーメソッド
@@ -276,6 +283,7 @@ const newItem = await exampleApiClient.post<Item>('/items', {
 - **型安全性**: 完全なTypeScript対応
 - **拡張性**: 新しいAPIの簡単な追加
 - **テスタビリティ**: 独立したテストが可能
+- **責務分離**: HttpClient・ApiClientの明確な役割分担
 
 中〜大規模なプロジェクトで特に効果を発揮し、長期的な保守性を大幅に向上させます。
 

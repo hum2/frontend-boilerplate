@@ -1,8 +1,6 @@
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse, AxiosError, InternalAxiosRequestConfig } from 'axios';
 import { ApiError } from '../types';
-
-// ログレベル定義
-type LogLevel = 'none' | 'error' | 'info' | 'debug';
+import { createHttpLogger, Logger, LogLevel } from '@/lib/logger';
 
 // HTTPクライアント設定
 export interface HttpClientConfig {
@@ -20,48 +18,6 @@ export interface RequestConfig {
     timeout?: number;
     params?: Record<string, any>;
     data?: any; // リクエストボディ（DELETEメソッドでも使用可能）
-}
-
-// ログ管理クラス
-class Logger {
-    private level: LogLevel;
-    private isProduction: boolean;
-
-    constructor(level: LogLevel = 'none') {
-        this.level = level;
-        this.isProduction = process.env.NODE_ENV === 'production';
-    }
-
-    private shouldLog(targetLevel: LogLevel): boolean {
-        if (this.isProduction && this.level === 'none') return false;
-
-        const levels: Record<LogLevel, number> = {
-            none: 0,
-            error: 1,
-            info: 2,
-            debug: 3
-        };
-
-        return levels[this.level] >= levels[targetLevel];
-    }
-
-    error(message: string, data?: any): void {
-        if (this.shouldLog('error')) {
-            console.error(`[HttpClient Error] ${message}`, data);
-        }
-    }
-
-    info(message: string, data?: any): void {
-        if (this.shouldLog('info')) {
-            console.log(`[HttpClient Info] ${message}`, data);
-        }
-    }
-
-    debug(message: string, data?: any): void {
-        if (this.shouldLog('debug')) {
-            console.log(`[HttpClient Debug] ${message}`, data);
-        }
-    }
 }
 
 // HTTPクライアントクラス
@@ -86,7 +42,7 @@ export class HttpClient {
         const envLogLevel = process.env.NEXT_PUBLIC_API_LOG_LEVEL as LogLevel;
         const logLevel = envLogLevel || this.config.logLevel || 'none';
 
-        this.logger = new Logger(this.config.enableLogging ? logLevel : 'none');
+        this.logger = this.config.enableLogging ? createHttpLogger(logLevel) : createHttpLogger('none');
 
         // axiosインスタンス作成
         const { retries, enableLogging, logLevel: _, ...axiosConfig } = this.config;

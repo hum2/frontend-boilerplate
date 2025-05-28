@@ -9,6 +9,7 @@ Next.js、TypeScript、Tailwind CSSを使用した最新のWebアプリケーシ
 - **言語**: TypeScript 5.0.0
 - **テスト**: Jest, React Testing Library, Playwright
 - **AI**: Claude 3.7 Sonnet
+- **コーディング規約**: 統一されたファイル命名規則とプロジェクト構造
 
 ## 機能
 
@@ -17,6 +18,7 @@ Next.js、TypeScript、Tailwind CSSを使用した最新のWebアプリケーシ
 - ダークモード対応
 - 型安全なデータ処理
 - AIサービス連携
+- 一貫したコーディング規約
 
 ## 始め方
 
@@ -70,6 +72,77 @@ NEXT_PUBLIC_API_BASE_URL="https://api.example.com"
 - `npm run prisma:migrate:dev`: Prismaマイグレーションを開発環境で実行
 - `npm run prisma:studio`: Prisma Studioを起動してデータベースを操作
 
+## コーディング規約
+
+### ファイル・ディレクトリ命名規則
+
+プロジェクト全体で一貫した命名規則を採用しています：
+
+#### 📁 **ディレクトリ名**
+- **コンポーネント**: PascalCase（例: `Button/`, `UserProfile/`, `ApiStatus/`）
+- **ユーティリティ**: camelCase（例: `utils/`, `hooks/`, `lib/`）
+- **機能別**: camelCase（例: `features/`, `domain/`, `infrastructure/`）
+
+#### 📄 **ファイル名**
+- **Reactコンポーネント**: PascalCase（例: `Button.tsx`, `UserProfile.tsx`, `ApiStatus.tsx`）
+- **ユーティリティ・ロジック**: camelCase（例: `userService.ts`, `apiClient.ts`, `logger.ts`）
+- **型定義**: camelCase（例: `types.ts`, `interfaces.ts`, `models.ts`）
+- **設定ファイル**: camelCase（例: `config.ts`, `constants.ts`）
+- **テストファイル**: 対象ファイル名 + `.test` または `.spec`（例: `Button.test.tsx`, `userService.spec.ts`）
+- **エクスポート統合**: 常に `index.ts`
+
+#### 🎯 **命名規則の原則**
+
+**✅ 推奨パターン**
+```
+src/
+├── components/
+│   ├── Button/              # PascalCase（コンポーネントディレクトリ）
+│   │   ├── Button.tsx       # PascalCase（Reactコンポーネント）
+│   │   ├── Button.test.tsx  # PascalCase + .test
+│   │   └── index.ts         # エクスポート統合
+│   └── UserProfile/         # PascalCase（コンポーネントディレクトリ）
+├── lib/
+│   ├── api/
+│   │   ├── client.ts        # camelCase（ユーティリティ）
+│   │   ├── types.ts         # camelCase（型定義）
+│   │   └── index.ts         # エクスポート統合
+│   ├── logger/
+│   │   ├── types.ts
+│   │   ├── logger.ts
+│   │   ├── factory.ts
+│   │   └── index.ts
+│   └── utils/                  # 共通ユーティリティ
+│       ├── helpers.ts       # camelCase（ヘルパー関数）
+│       ├── constants.ts     # camelCase（定数定義）
+│       └── index.ts         # エクスポート統合
+└── hooks/
+    ├── useAuth.ts           # camelCase（カスタムフック）
+    └── useApiClient.ts      # camelCase（カスタムフック）
+```
+
+**❌ 避けるべきパターン**
+```
+src/
+├── Components/              # ❌ ディレクトリ名の大文字始まり（ユーティリティ系）
+├── lib/
+│   ├── ApiClient.ts         # ❌ ユーティリティファイルのPascalCase
+│   └── HelperUtils.ts       # ❌ ユーティリティファイルのPascalCase
+└── hooks/
+    └── UseAuth.ts           # ❌ フックファイルのPascalCase
+```
+
+#### 🔧 **一貫性の利点**
+- **開発効率**: ファイル検索・ナビゲーションの高速化
+- **チーム開発**: 新規参加者の学習コスト削減
+- **保守性**: 命名パターンによる責務の明確化
+- **ツール連携**: IDEやビルドツールとの互換性向上
+
+#### 📝 **追加ガイドライン**
+- **略語**: 可能な限り避け、明確な名前を使用（`btn` → `button`, `usr` → `user`）
+- **複数形**: 配列やリストを扱う場合は複数形を使用（`users.ts`, `items.ts`）
+- **接頭辞**: 用途に応じた接頭辞を使用（`use` for hooks, `create` for factories）
+
 ## プロジェクト構造
 
 ```
@@ -90,11 +163,16 @@ NEXT_PUBLIC_API_BASE_URL="https://api.example.com"
 │   │       └── todo/               # API実装例
 │   │           └── todo_repository_impl.ts
 │   ├── lib/
-│   │   ├── api/                    # API共通処理・型定義
+│   │   ├── api/
 │   │   │   ├── axiosInstance.ts
 │   │   │   ├── fetchApi.ts
 │   │   │   ├── config.ts
 │   │   │   └── types.ts
+│   │   ├── logger/
+│   │   │   ├── types.ts
+│   │   │   ├── logger.ts
+│   │   │   ├── factory.ts
+│   │   │   └── index.ts
 │   │   └── utils/                  # 共通ユーティリティ
 │   ├── di/                         # DIコンテナ・Provider
 │   │   ├── provider.tsx
@@ -110,6 +188,32 @@ NEXT_PUBLIC_API_BASE_URL="https://api.example.com"
 ├── tests/                          # e2eテスト(playwright)
 └── ...                             # その他の設定ファイル
 ```
+
+## 開発ガイドライン
+
+### 新規ファイル作成時の注意事項
+
+1. **命名規則の遵守**: 上記のコーディング規約に従ってファイル・ディレクトリ名を決定
+2. **責務の分離**: 1つのファイルには1つの責務のみを実装
+3. **index.tsの活用**: ディレクトリ内のエクスポート統合には必ずindex.tsを使用
+4. **型安全性の確保**: TypeScriptの型定義を適切に活用
+5. **テストファイルの作成**: 新規機能には対応するテストファイルを作成
+
+### コードレビューのポイント
+
+- ✅ ファイル命名規則の遵守
+- ✅ 適切なディレクトリ配置
+- ✅ 責務分離の実現
+- ✅ 型安全性の確保
+- ✅ テストカバレッジの維持
+
+### 推奨開発フロー
+
+1. **設計**: 機能要件と技術要件の明確化
+2. **構造設計**: ディレクトリ・ファイル構成の計画
+3. **実装**: コーディング規約に従った実装
+4. **テスト**: ユニット・統合・E2Eテストの作成
+5. **レビュー**: コードレビューとリファクタリング
 
 ## ライセンス
 
