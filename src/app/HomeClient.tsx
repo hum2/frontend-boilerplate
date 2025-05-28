@@ -46,6 +46,9 @@ export default function HomeClient({ initialTodos }: Props) {
                     <Link href="/rsc">
                         <Button label="訪問者カウント（RSC）" />
                     </Link>
+                    <Link href="/example/todo">
+                        <Button label="TODO" />
+                    </Link>
                 </div>
             </Card>
 
