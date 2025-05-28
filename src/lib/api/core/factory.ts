@@ -1,4 +1,4 @@
-import { HttpClient, type HttpClientConfig, type AuthConfig } from './HttpClient';
+import { HttpClient, type HttpClientConfig } from './HttpClient';
 
 /**
  * 汎用APIクライアント作成ファクトリー
@@ -12,21 +12,7 @@ export interface ApiConfig {
     baseURL: string;
     timeout?: number;
     headers?: Record<string, string>;
-    auth?: {
-        type: 'bearer' | 'apikey' | 'basic' | 'custom';
-        token?: string;
-        apiKey?: string;
-        username?: string;
-        password?: string;
-        customHeader?: { key: string; value: string };
-    };
 }
-
-// 型ガード関数
-const isValidAuthType = (type: string | undefined): type is AuthConfig['type'] => {
-    const validTypes: AuthConfig['type'][] = ['bearer', 'apikey', 'basic', 'custom'];
-    return type !== undefined && validTypes.includes(type as AuthConfig['type']);
-};
 
 /**
  * APIクライアントを作成する汎用ファクトリーメソッド
@@ -40,18 +26,6 @@ export const createApiClient = (config: ApiConfig): HttpClient => {
         timeout: config.timeout || 10000,
         headers: config.headers || {},
     };
-
-    // 認証設定の変換
-    if (config.auth) {
-        httpConfig.auth = {
-            type: config.auth.type,
-            token: config.auth.token,
-            apiKey: config.auth.apiKey,
-            username: config.auth.username,
-            password: config.auth.password,
-            customHeader: config.auth.customHeader,
-        };
-    }
 
     return new HttpClient(httpConfig);
 };
@@ -74,28 +48,6 @@ export const createConfigFromEnv = (envPrefix: string): ApiConfig => {
             ? parseInt(process.env[`${envPrefix}_TIMEOUT`]!, 10)
             : 10000,
     };
-
-    // 認証設定の読み込み
-    const authType = process.env[`${envPrefix}_AUTH_TYPE`];
-    if (isValidAuthType(authType)) {
-        config.auth = {
-            type: authType,
-            token: process.env[`${envPrefix}_AUTH_TOKEN`],
-            apiKey: process.env[`${envPrefix}_AUTH_API_KEY`],
-            username: process.env[`${envPrefix}_AUTH_USERNAME`],
-            password: process.env[`${envPrefix}_AUTH_PASSWORD`],
-        };
-
-        // カスタムヘッダーの設定
-        const customHeaderKey = process.env[`${envPrefix}_AUTH_CUSTOM_HEADER_KEY`];
-        const customHeaderValue = process.env[`${envPrefix}_AUTH_CUSTOM_HEADER_VALUE`];
-        if (customHeaderKey && customHeaderValue) {
-            config.auth.customHeader = {
-                key: customHeaderKey,
-                value: customHeaderValue,
-            };
-        }
-    }
 
     return config;
 };

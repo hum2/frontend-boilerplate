@@ -1,5 +1,5 @@
 // HTTPクライアントコア
-export { HttpClient, type HttpClientConfig, type AuthConfig } from './HttpClient';
+export { HttpClient, type HttpClientConfig } from './HttpClient';
 
 // 汎用ファクトリーメソッド
 export {

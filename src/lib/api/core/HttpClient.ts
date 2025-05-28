@@ -1,22 +1,11 @@
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse, AxiosError, InternalAxiosRequestConfig } from 'axios';
 import { ApiError } from '../types';
 
-// 認証設定
-export interface AuthConfig {
-    type: 'bearer' | 'apikey' | 'basic' | 'custom';
-    token?: string;
-    apiKey?: string;
-    username?: string;
-    password?: string;
-    customHeader?: { key: string; value: string };
-}
-
 // HTTPクライアント設定
 export interface HttpClientConfig {
     baseURL?: string;
     timeout?: number;
     headers?: Record<string, string>;
-    auth?: AuthConfig;
     retries?: number;
     enableLogging?: boolean;
 }
@@ -38,7 +27,7 @@ export class HttpClient {
         };
 
         // axiosインスタンス作成
-        const { auth, retries, enableLogging, ...axiosConfig } = this.config;
+        const { retries, enableLogging, ...axiosConfig } = this.config;
         this.instance = axios.create(axiosConfig);
 
         this.setupInterceptors();
@@ -49,11 +38,6 @@ export class HttpClient {
         // リクエストインターセプター
         this.instance.interceptors.request.use(
             (config) => {
-                // 認証ヘッダーの設定
-                if (this.config.auth) {
-                    this.addAuthHeader(config);
-                }
-
                 // ログ出力
                 if (this.config.enableLogging) {
                     console.log('🚀 Request:', config.method?.toUpperCase(), config.url);
@@ -90,37 +74,6 @@ export class HttpClient {
                 return Promise.reject(this.normalizeError(error));
             }
         );
-    }
-
-    // 認証ヘッダーの追加
-    private addAuthHeader(config: InternalAxiosRequestConfig): void {
-        if (!this.config.auth || !config.headers) return;
-
-        const { auth } = this.config;
-
-        switch (auth.type) {
-            case 'bearer':
-                if (auth.token) {
-                    config.headers['Authorization'] = `Bearer ${auth.token}`;
-                }
-                break;
-            case 'apikey':
-                if (auth.apiKey) {
-                    config.headers['X-API-Key'] = auth.apiKey;
-                }
-                break;
-            case 'basic':
-                if (auth.username && auth.password) {
-                    const credentials = btoa(`${auth.username}:${auth.password}`);
-                    config.headers['Authorization'] = `Basic ${credentials}`;
-                }
-                break;
-            case 'custom':
-                if (auth.customHeader) {
-                    config.headers[auth.customHeader.key] = auth.customHeader.value;
-                }
-                break;
-        }
     }
 
     // リトライ判定

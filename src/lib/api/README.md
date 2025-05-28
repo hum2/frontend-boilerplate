@@ -135,25 +135,18 @@ NEXT_PUBLIC_EXAMPLE_API_BASE_URL=https://api.example.com
 NEXT_PUBLIC_EXAMPLE_API_KEY=your-api-key
 ```
 
-### 認証設定パターン（任意のAPIで使用可能）
+### Example API認証設定（Bearer認証固定）
 ```env
-# Bearer Token
-NEW_API_AUTH_TYPE=bearer
-NEW_API_AUTH_TOKEN=your-bearer-token
+# Bearer Token認証
+NEXT_PUBLIC_EXAMPLE_API_AUTH_TOKEN=your-bearer-token
+```
 
-# API Key
-NEW_API_AUTH_TYPE=apikey
-NEW_API_AUTH_API_KEY=your-api-key
+### 使用例
+```typescript
+import { exampleApiClient } from '@/lib/api/example';
 
-# Basic認証
-NEW_API_AUTH_TYPE=basic
-NEW_API_AUTH_USERNAME=username
-NEW_API_AUTH_PASSWORD=password
-
-# カスタムヘッダー
-NEW_API_AUTH_TYPE=custom
-NEW_API_AUTH_CUSTOM_HEADER_KEY=X-Custom-Auth
-NEW_API_AUTH_CUSTOM_HEADER_VALUE=custom-value
+// Bearer認証ヘッダーは環境変数の設定に基づいて自動的に追加される
+const data = await exampleApiClient.get<SomeType>('/api/endpoint');
 ```
 
 ## コア機能
@@ -162,7 +155,7 @@ NEW_API_AUTH_CUSTOM_HEADER_VALUE=custom-value
 
 汎用的なHTTPクライアントクラスで、以下の機能を提供：
 
-- **認証**: Bearer、API Key、Basic、カスタムヘッダー対応
+- **認証**: Bearer認証対応
 - **リトライ**: 5xxエラーとネットワークエラーの自動リトライ
 - **ログ**: リクエスト/レスポンスの詳細ログ
 - **エラーハンドリング**: 統一されたエラー形式

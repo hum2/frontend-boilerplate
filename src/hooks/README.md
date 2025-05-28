@@ -1,210 +1,179 @@
-# カスタムフック設計ガイド
+# Hooks ディレクトリ
 
-## 概要
-
-このプロジェクトでは、**ドメインごとにhooksファイルを分割**する設計パターンを採用しています。これにより、関心の分離、保守性、テスタビリティを向上させています。
+このディレクトリには、アプリケーション全体で使用されるカスタムフックが含まれています。
 
 ## ディレクトリ構成
 
 ```
 src/hooks/
-├── useUsers.ts          # ユーザー管理
-├── useItems.ts          # アイテム管理
-├── useServices.ts       # サービス管理
-├── useOrders.ts         # 注文管理（例）
-├── useNotifications.ts  # 通知管理（例）
-└── README.md           # このファイル
+├── api/                    # API関連フック
+│   ├── useTodos.ts        # Todo API フック
+│   └── useMasterDataApi.ts # マスターデータAPI フック
+├── use-mobile.tsx         # UI関連フック
+└── README.md              # このファイル
 ```
 
 ## 設計原則
 
-### ✅ **単一責任原則**
-- 1つのhooksファイルは1つのドメインのみを担当
-- 関連のない機能は別ファイルに分離
+### 1. **関心の分離**
+- **API関連**: `api/`ディレクトリに配置
+- **UI関連**: ルート直下に配置
+- **Context関連**: `src/contexts/`に配置
 
-### ✅ **命名規則**
-- ファイル名: `use{Domain}.ts` (例: `useUsers.ts`, `useItems.ts`)
-- フック名: `use{Domain}`, `use{Domain}Actions` など
+### 2. **命名規則**
+- すべてのフックは`use`で始まる
+- 機能を明確に表現する名前を使用
+- API関連フックは`useXxxApi`または`useXxx`
 
-### ✅ **共通パターン**
-各ドメインで以下の共通パターンを採用:
+### 3. **型安全性**
+- すべてのフックでTypeScriptの型定義を使用
+- APIレスポンスの型を明確に定義
+- エラーハンドリングの型も適切に定義
+
+## フック一覧
+
+### API関連フック
+
+#### `useTodos`
+Todo APIとの通信を管理するフック
 
 ```typescript
-// 一覧取得フック
-export const useUsers = (params?: UserListParams) => {
-    // 実装
-};
+const { data, loading, error, refetch } = useTodos();
+```
 
-// 詳細取得フック
-export const useUser = (id: string) => {
-    // 実装
-};
+#### `useMasterDataApi`
+マスターデータAPIとの通信を管理するフック（クライアントサイド用）
 
-// 操作フック
-export const useUserActions = () => {
-    // 実装
+```typescript
+const { data, loading, error, refetch } = useMasterDataApi();
+```
+
+### UI関連フック
+
+#### `useIsMobile`
+モバイル表示の判定を行うフック
+
+```typescript
+const isMobile = useIsMobile();
+```
+
+## 使用例
+
+### 基本的な使用方法
+
+```typescript
+import { useTodos } from '@/hooks/api/useTodos';
+
+export const TodoList = () => {
+    const { data, loading, error } = useTodos();
+
+    if (loading) return <div>読み込み中...</div>;
+    if (error) return <div>エラー: {error.message}</div>;
+
+    return (
+        <ul>
+            {data?.map(todo => (
+                <li key={todo.id}>{todo.title}</li>
+            ))}
+        </ul>
+    );
 };
 ```
 
-## 実装例
-
-### ユーザー管理 (`useUsers.ts`)
+### エラーハンドリング
 
 ```typescript
-import { useUsers, useUser, useUserActions } from '@/hooks/useUsers';
+import { useTodos } from '@/hooks/api/useTodos';
 
-// ユーザー一覧
-const { data, loading, error, refetch } = useUsers({
-    page: 1,
-    limit: 10,
-    role: 'admin'
-});
+export const TodoListWithErrorHandling = () => {
+    const { data, loading, error, refetch } = useTodos();
 
-// ユーザー詳細
-const { data: user } = useUser('user-id');
+    const handleRetry = () => {
+        refetch();
+    };
 
-// ユーザー操作
-const { create, update, remove } = useUserActions();
+    if (loading) return <div>読み込み中...</div>;
+
+    if (error) {
+        return (
+            <div>
+                <p>エラーが発生しました: {error.message}</p>
+                <button onClick={handleRetry}>再試行</button>
+            </div>
+        );
+    }
+
+    return (
+        <ul>
+            {data?.map(todo => (
+                <li key={todo.id}>{todo.title}</li>
+            ))}
+        </ul>
+    );
+};
 ```
-
-### アイテム管理 (`useItems.ts`)
-
-```typescript
-import { useItems, useItem, useItemActions } from '@/hooks/useItems';
-
-// アイテム一覧（フィルタリング付き）
-const { data } = useItems({
-    category: 'electronics',
-    status: 'available',
-    minPrice: 100,
-    maxPrice: 1000
-});
-
-// アイテム操作
-const { updatePrice, bulkUpdateStatus } = useItemActions();
-```
-
-## 利点
-
-### 🎯 **関心の分離**
-- ドメインごとに責任が明確
-- 変更の影響範囲が限定的
-
-### 🔧 **保守性**
-- 機能追加時の影響が局所的
-- コードの可読性向上
-
-### 🧪 **テスタビリティ**
-- ドメインごとに独立したテスト
-- モック化が容易
-
-### 📈 **スケーラビリティ**
-- 新しいドメインの追加が簡単
-- チーム開発での並行作業が可能
-
-### 🔄 **再利用性**
-- 同じaxiosインスタンスを複数ドメインで共有
-- 共通パターンの適用
 
 ## ベストプラクティス
 
-### 1. **型定義の配置**
-```typescript
-// ✅ 推奨: 各hooksファイル内で型定義
-export interface User {
-    id: string;
-    name: string;
-    // ...
-}
+### ✅ **推奨パターン**
 
-// ❌ 非推奨: 巨大な共通型ファイル
-```
+1. **単一責任の原則**
+   - 1つのフックは1つの責任のみを持つ
+   - 複雑な処理は複数のフックに分割
 
-### 2. **エンドポイントの指定**
-```typescript
-// ✅ 推奨: hooks内で直接エンドポイント指定
-const result = await serviceApiClient.get<UserListResponse>('/users');
+2. **型安全性の確保**
+   - すべての戻り値に型定義
+   - APIレスポンスの型を明確に定義
 
-// ❌ 非推奨: 事前定義されたエンドポイント関数
-```
+3. **エラーハンドリング**
+   - 適切なエラー状態の管理
+   - ユーザーフレンドリーなエラーメッセージ
 
-### 3. **エラーハンドリング**
-```typescript
-// ✅ 各フックで適切なエラー処理
-const [error, setError] = useState<Error | null>(null);
-
-try {
-    // API呼び出し
-} catch (err) {
-    setError(err as Error);
-}
-```
-
-### 4. **ローディング状態**
-```typescript
-// ✅ 操作ごとに適切なローディング状態
-const [loading, setLoading] = useState(false);
-const [actionLoading, setActionLoading] = useState(false);
-```
-
-## 新しいドメインの追加手順
-
-### 1. hooksファイル作成
-```bash
-touch src/hooks/useOrders.ts
-```
-
-### 2. 基本構造の実装
-```typescript
-// 型定義
-export interface Order { /* ... */ }
-
-// 一覧取得フック
-export const useOrders = (params?: OrderListParams) => { /* ... */ };
-
-// 詳細取得フック
-export const useOrder = (id: string) => { /* ... */ };
-
-// 操作フック
-export const useOrderActions = () => { /* ... */ };
-```
-
-### 3. コンポーネントでの使用
-```typescript
-import { useOrders, useOrderActions } from '@/hooks/useOrders';
-```
-
-## 注意点
+4. **パフォーマンス最適化**
+   - 必要に応じて`useCallback`、`useMemo`を使用
+   - 不要な再レンダリングを防ぐ
 
 ### ⚠️ **避けるべきパターン**
 
-1. **巨大なhooksファイル**
-   - 複数ドメインを1つのファイルに混在させない
+1. **巨大なフック**
+   - 複数の責任を持つフック
+   - 100行を超える長大なフック
 
-2. **過度な抽象化**
-   - 共通化のしすぎで複雑になることを避ける
+2. **型定義の欠如**
+   - `any`型の多用
+   - 戻り値の型が不明確
 
-3. **循環依存**
-   - hooks間の相互依存を避ける
+3. **副作用の乱用**
+   - 不適切な`useEffect`の使用
+   - 依存配列の不備
 
-### ✅ **推奨パターン**
+## 新しいフックの追加
 
-1. **ドメイン境界の明確化**
-   - ビジネスロジックに基づいた分割
+新しいフックを追加する際は、以下の手順に従ってください：
 
-2. **共通axiosインスタンスの活用**
-   - `serviceApiClient`を各ドメインで再利用
+1. **適切なディレクトリに配置**
+   - API関連: `api/`ディレクトリ
+   - UI関連: ルート直下
 
-3. **一貫した命名規則**
-   - プロジェクト全体で統一されたパターン
+2. **型定義の作成**
+   - インターフェースの定義
+   - 戻り値の型定義
+
+3. **テストの作成**
+   - 基本的な動作テスト
+   - エラーケースのテスト
+
+4. **ドキュメントの更新**
+   - このREADMEファイルの更新
+   - 使用例の追加
 
 ## まとめ
 
-ドメインごとのhooks分割により、以下を実現できます：
+このフック設計により以下を実現：
 
-- **保守性の向上**: 変更の影響範囲が限定的
-- **開発効率の向上**: 並行開発が可能
-- **コード品質の向上**: 単一責任原則の遵守
-- **テストの簡素化**: ドメインごとの独立したテスト
+- **保守性**: 明確な責任分離と構造化
+- **再利用性**: 汎用的なフックの設計
+- **型安全性**: 完全なTypeScript対応
+- **テスタビリティ**: 独立したテストが可能
 
-この設計パターンは、中〜大規模なプロジェクトで特に効果を発揮し、長期的な保守性を大幅に向上させます。
+適切なフック設計により、アプリケーションの品質と開発効率を大幅に向上させることができます。
